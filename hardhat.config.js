@@ -1,4 +1,5 @@
 require("@nomiclabs/hardhat-waffle");
+require('hardhat-abi-exporter');
 require('hardhat-deploy');
 
 // This is a sample Hardhat task. To learn how to create your own go to
