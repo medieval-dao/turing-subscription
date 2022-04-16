@@ -20,7 +20,15 @@ contract TuringSubscriptionManager {
 
     EnumerableSet.UintSet _activeSubscription;
     mapping(address=>EnumerableSet.UintSet) _ownedSubscription;
+    mapping(uint256=>EnumerableSet.AddressSet) _subscriptionOwner;
     mapping(uint256=>EnumerableSet.AddressSet) _subscriptionPermittedCaller;
+
+    event SubscriptionCreated(uint256 subscriptionId);
+    event SubscriptionCanceled(uint256 subscriptionId);
+    event OwnerAdded(uint256 subscriptionId, address owner);
+    event OwnerRemoved(uint256 subscriptionId, address owner);
+    event PermitedCallerAdded(uint256 subscriptionId, address callder);
+    event PermitedCallerRemoved(uint256 subscriptionId, address callder);
 
     constructor(
         BobaTuringCredit _turingCredit
@@ -40,25 +48,32 @@ contract TuringSubscriptionManager {
         _;
     }
     
-    function createSubscription() external {
+    function createSubscription() external returns (uint256 subscriptionId) {
         TuringHelper _helper = new TuringHelper();
-        uint256 subscriptionId = numSubscriptionCreated;
+        subscriptionId = numSubscriptionCreated;
         _subscription[subscriptionId] = _helper;
         _activeSubscription.add(subscriptionId);
-        _ownedSubscription[msg.sender].add(subscriptionId);
+
+        _addSubscriptionOnwer(subscriptionId, msg.sender);
+
         numSubscriptionCreated++;
+
+        emit SubscriptionCreated(subscriptionId);
     }
 
     function cancelSubscriptionId(uint256 subscriptionId) 
         onlySubscriptionOwner(subscriptionId) external {
         
-        // Canceling subscription doesn't destruct the turing owner.
-        // It transfers the ownership to msg.sender. 
+        // Canceling subscription doesn't destruct the turing helper.
+        // It transfers its ownership to msg.sender. 
         _subscription[subscriptionId].transferOwnership(msg.sender);
 
         delete _subscription[subscriptionId];
         _activeSubscription.remove(subscriptionId);
-        _ownedSubscription[msg.sender].remove(subscriptionId);
+
+        _removeSubscriptionOnwer(subscriptionId, msg.sender);
+
+        emit SubscriptionCanceled(subscriptionId);
     }
 
     function addBalanceToSubscription(uint256 subscriptionId, uint256 _addBalanceAmount) 
@@ -81,6 +96,35 @@ contract TuringSubscriptionManager {
             _callerAddress
         );
         _subscriptionPermittedCaller[subscriptionId].add(_callerAddress);
+        emit PermitedCallerAdded(subscriptionId, _callerAddress);
+    }
+
+    function _addSubscriptionOnwer(uint256 subscriptionId, address _owner)
+        internal {
+
+        _ownedSubscription[_owner].add(subscriptionId);
+        _subscriptionOwner[subscriptionId].add(_owner);
+        emit OwnerAdded(subscriptionId, _owner);
+    }
+
+    function _removeSubscriptionOnwer(uint256 subscriptionId, address _owner)
+        internal {
+
+        _ownedSubscription[_owner].remove(subscriptionId);
+        _subscriptionOwner[subscriptionId].remove(_owner);
+        emit OwnerRemoved(subscriptionId, _owner);
+    }
+
+    function addSubscriptionOnwer(uint256 subscriptionId, address _owner)
+        onlySubscriptionOwner(subscriptionId) external {
+
+        _addSubscriptionOnwer(subscriptionId, _owner);
+    }
+
+    function removeSubscriptionOnwer(uint256 subscriptionId, address _owner)
+        onlySubscriptionOwner(subscriptionId) external {
+
+        _removeSubscriptionOnwer(subscriptionId, _owner);
     }
 
     function removePermittedCaller(uint256 subscriptionId, address _callerAddress) 
@@ -90,6 +134,7 @@ contract TuringSubscriptionManager {
             _callerAddress
         );
         _subscriptionPermittedCaller[subscriptionId].remove(_callerAddress);
+        emit PermitedCallerRemoved(subscriptionId, _callerAddress);
     }
     
     /* View Functions */
@@ -137,5 +182,17 @@ contract TuringSubscriptionManager {
         public view onlyActiveSubscription(subscriptionId) returns (uint256){
         
         return _subscriptionPermittedCaller[subscriptionId].length();
+    }
+
+    function subscriptionOwnerByIndex(uint256 subscriptionId, uint256 index) 
+        public view onlyActiveSubscription(subscriptionId) returns (address) {
+        
+        return _subscriptionOwner[subscriptionId].at(index);
+    }
+
+    function subscriptionOwnerCount(uint256 subscriptionId) 
+        public view onlyActiveSubscription(subscriptionId) returns (uint256){
+        
+        return _subscriptionOwner[subscriptionId].length();
     }
 }
