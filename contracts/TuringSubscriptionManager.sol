@@ -72,8 +72,11 @@ contract TuringSubscriptionManager {
         delete _subscription[subscriptionId];
         _activeSubscription.remove(subscriptionId);
 
-        _removeSubscriptionOnwer(subscriptionId, msg.sender);
-
+        for(uint256 i=0; i< _subscriptionOwner[subscriptionId].length(); i++) {
+            _removeSubscriptionOnwer(subscriptionId, 
+                _subscriptionOwner[subscriptionId].at(i));
+        }
+        
         emit SubscriptionCanceled(subscriptionId, msg.sender);
     }
 
