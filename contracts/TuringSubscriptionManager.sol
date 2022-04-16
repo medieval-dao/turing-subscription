@@ -23,12 +23,13 @@ contract TuringSubscriptionManager {
     mapping(uint256=>EnumerableSet.AddressSet) _subscriptionOwner;
     mapping(uint256=>EnumerableSet.AddressSet) _subscriptionPermittedCaller;
 
-    event SubscriptionCreated(uint256 subscriptionId);
-    event SubscriptionCanceled(uint256 subscriptionId);
+    event SubscriptionCreated(uint256 subscriptionId, address user);
+    event SubscriptionCanceled(uint256 subscriptionId, address user);
     event OwnerAdded(uint256 subscriptionId, address owner);
     event OwnerRemoved(uint256 subscriptionId, address owner);
     event PermitedCallerAdded(uint256 subscriptionId, address callder);
     event PermitedCallerRemoved(uint256 subscriptionId, address callder);
+    event CreditAdded(uint256 subscriptionId, uint256 amount, address from);
 
     constructor(
         BobaTuringCredit _turingCredit
@@ -58,7 +59,7 @@ contract TuringSubscriptionManager {
 
         numSubscriptionCreated++;
 
-        emit SubscriptionCreated(subscriptionId);
+        emit SubscriptionCreated(subscriptionId, msg.sender);
     }
 
     function cancelSubscriptionId(uint256 subscriptionId) 
@@ -73,7 +74,7 @@ contract TuringSubscriptionManager {
 
         _removeSubscriptionOnwer(subscriptionId, msg.sender);
 
-        emit SubscriptionCanceled(subscriptionId);
+        emit SubscriptionCanceled(subscriptionId, msg.sender);
     }
 
     function addBalanceToSubscription(uint256 subscriptionId, uint256 _addBalanceAmount) 
@@ -87,6 +88,7 @@ contract TuringSubscriptionManager {
             _addBalanceAmount, 
             address(_subscription[subscriptionId])
         );
+        emit CreditAdded(subscriptionId, _addBalanceAmount, msg.sender);
     }
 
     function addPermittedCaller(uint256 subscriptionId, address _callerAddress)
