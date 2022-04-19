@@ -91,11 +91,8 @@ contract TuringSubscriptionManager is Ownable {
         IERC20 turingToken = IERC20(turingCredit.turingToken());
         turingToken.safeTransferFrom(msg.sender, address(this), _addBalanceAmount);
         
-        uint256 _addBalanceAmountActual;
-
-        if(feeRate > 0) {
-            _addBalanceAmountActual = _addBalanceAmount - _addBalanceAmount * feeRate / BPS_UNIT;
-        }
+        uint256 _addBalanceAmountActual = 
+            _addBalanceAmount - _addBalanceAmount * feeRate / BPS_UNIT;
 
         turingToken.approve(address(turingCredit), _addBalanceAmountActual);
         turingCredit.addBalanceTo(
