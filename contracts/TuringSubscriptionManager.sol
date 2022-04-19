@@ -3,11 +3,12 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./TuringHelper.sol";
 import "./BobaTuringCredit.sol";
 
-contract TuringSubscriptionManager {
+contract TuringSubscriptionManager is Ownable {
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.UintSet;
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -22,6 +23,10 @@ contract TuringSubscriptionManager {
     mapping(address=>EnumerableSet.UintSet) _ownedSubscription;
     mapping(uint256=>EnumerableSet.AddressSet) _subscriptionOwner;
     mapping(uint256=>EnumerableSet.AddressSet) _subscriptionPermittedCaller;
+
+    uint256 public feeRate;
+    uint256 constant BPS_UNIT = 10000;
+    uint256 constant MAX_FEE_RATE = BPS_UNIT / 100; // Max 1 %
 
     event SubscriptionCreated(uint256 subscriptionId, address user);
     event SubscriptionCanceled(uint256 subscriptionId, address user);
@@ -85,13 +90,20 @@ contract TuringSubscriptionManager {
 
         IERC20 turingToken = IERC20(turingCredit.turingToken());
         turingToken.safeTransferFrom(msg.sender, address(this), _addBalanceAmount);
-        turingToken.approve(address(turingCredit), _addBalanceAmount);
+        
+        uint256 _addBalanceAmountActual;
 
+        if(feeRate > 0) {
+            _addBalanceAmountActual = _addBalanceAmount - _addBalanceAmount * feeRate / BPS_UNIT;
+        }
+
+        turingToken.approve(address(turingCredit), _addBalanceAmountActual);
         turingCredit.addBalanceTo(
-            _addBalanceAmount, 
+            _addBalanceAmountActual, 
             address(_subscription[subscriptionId])
         );
-        emit CreditAdded(subscriptionId, _addBalanceAmount, msg.sender);
+
+        emit CreditAdded(subscriptionId, _addBalanceAmountActual, msg.sender);
     }
 
     function addPermittedCaller(uint256 subscriptionId, address _callerAddress)
@@ -141,9 +153,34 @@ contract TuringSubscriptionManager {
         _subscriptionPermittedCaller[subscriptionId].remove(_callerAddress);
         emit PermitedCallerRemoved(subscriptionId, _callerAddress);
     }
+
+
+    /* Only Owner */
+
+    function setFeeRate(uint256 _newRate) external onlyOwner {
+        require(_newRate <= MAX_FEE_RATE, "Invalid Rate");
+        feeRate = _newRate;
+    }
+
+    function claimFee() external onlyOwner {
+        IERC20 turingToken = IERC20(turingCredit.turingToken());
+        uint256 amount = turingToken.balanceOf(address(this));
+        turingToken.transfer(msg.sender, amount);
+    }
+
+    function rescueERC20(
+        IERC20 tokenContract,
+        address to,
+        uint256 amount
+    ) external onlyOwner {
+        tokenContract.safeTransfer(to, amount);
+    }
+
+    function rescueETH(address to, uint256 amount) external onlyOwner {
+        payable(to).transfer(amount);
+    }
     
     /* View Functions */
-
     function getSubscriptionTuringHelper(uint256 subscriptionId) 
         public view onlyActiveSubscription(subscriptionId) returns (address) {
         
