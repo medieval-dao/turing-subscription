@@ -20,12 +20,14 @@ module.exports = async ({
     let turingCredit;
     if(networkName == "bobaRinkeby"){
       turingCredit = "0x208c3CE906cd85362bd29467819d3AcbE5FC1614";
+    } else if (networkName == "boba") {
+      turingCredit = "0xF8D2f1b0292C0Eeef80D8F47661A9DaCDB4b23bf";
     }
   
     // the following will only deploy "GenericMetaTxProcessor" if the contract was never deployed or if the code changed since last deployment
     let turingSubscriptionManager = await deploy('TuringSubscriptionManager', {
       from: deployer.address,
-      gasLimit: 4000000,
+      //gasLimit: 4000000,
       args: [
         turingCredit
       ],

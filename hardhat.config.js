@@ -20,6 +20,10 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  */
 module.exports = {
   networks: {
+    boba: {
+      url: "https://mainnet.boba.network",
+      accounts: [process.env.DEPLOYER_KEY]
+    },
     bobaRinkeby: {
       url: "https://rinkeby.boba.network",
       accounts: [process.env.TEST_DEPLOYER_KEY]
