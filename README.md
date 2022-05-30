@@ -1,9 +1,12 @@
 # Turing Hub
+
 Turing Hub provides an all-in-one interface for creating, funding, managing your Truing helper.
 
 With Turing Hub, one can deploy the Turing helper contract with a single click. Comparing to use the Turing helper directly, Turing Hub also provides a more sophisticated interface for managing access control. It allows adding multiple owners to a Turing helper for better team managements, or it can remove the owner completely to avoid changing the configuration accidentally.
 
-Demo: https://turing-hub.medievaldao.games/
+Site: https://turing-hub.medievaldao.games/
+
+Demo Video: [https://drive.google.com/file/d/1PQdbmy8CEzXVt4_vQIxr3EJq0nVK6Fxc/view?usp=sharing](https://drive.google.com/file/d/1PQdbmy8CEzXVt4_vQIxr3EJq0nVK6Fxc/view?usp=sharing)
 
 ![slide-01](./readme_assets/slide-01.jpg)
 
@@ -21,4 +24,3 @@ Demo: https://turing-hub.medievaldao.games/
 ![slide-07](./readme_assets/slide-07.jpg)
 
 ![slide-08](./readme_assets/slide-08.jpg)
->>>>>>> 24c4273 (update readme)
