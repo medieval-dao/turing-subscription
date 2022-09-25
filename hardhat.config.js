@@ -27,6 +27,10 @@ module.exports = {
     bobaRinkeby: {
       url: "https://rinkeby.boba.network",
       accounts: [process.env.TEST_DEPLOYER_KEY]
+    },
+    bobaAvaxTest: {
+      url: "https://testnet.avax.boba.network",
+      accounts: [process.env.DEPLOYER_KEY]
     }
   },
   solidity: {
